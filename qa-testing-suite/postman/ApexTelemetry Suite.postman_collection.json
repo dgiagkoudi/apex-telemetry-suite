@@ -1,0 +1,153 @@
+{
+  "info": {
+    "_postman_id": "7ba6a1c0-81a3-472e-9289-b851e9308a4d",
+    "name": "ApexTelemetry Suite",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "48792363"
+  },
+  "item": [
+    {
+      "name": "1. Submit Valid Telemetry",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"rpm\": 6000,\r\n  \"batteryTemperature\": 40.2,\r\n  \"speed\": 80.0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/telemetry",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "telemetry"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Trigger Violation",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {\r",
+              "    pm.response.to.have.status(201);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"rpm\": 4500,\r\n  \"batteryTemperature\": 79.5,\r\n  \"speed\": 55.0\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/api/telemetry",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "telemetry"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Get Violations",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              ""
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Violations array is not empty and contains CRITICAL severity\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    pm.expect(jsonData.length).to.be.above(0);\r",
+              "    \r",
+              "    pm.expect(jsonData[0].severity).to.eql(\"CRITICAL\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/api/telemetry/violations",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "api",
+            "telemetry",
+            "violations"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
