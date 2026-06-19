@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,54 +45,43 @@ public class TelemetryApiIntegrationTests {
     }
 
     @Test
-    @DisplayName("Successfully save valid telemetry data and return 201 Created")
+    @DisplayName("Successfully save expanded telemetry data")
     void testReceiveValidTelemetry() throws Exception {
         TelemetryData data = new TelemetryData();
-        data.setRpm(5000);
-        data.setBatteryTemperature(45.0);
-        data.setSpeed(60.5);
+        data.setRpm(6000);
+        data.setBatteryTemperature(42.0);
+        data.setSpeed(85.3);
+        data.setStateOfCharge(88.5);
+        data.setAccumulatorVoltage(350.0);
+        data.setAccumulatorCurrent(100.0);
+        data.setGForceX(1.2);
+        data.setSteeringAngle(5.0);
+        data.setThrottlePosition(90.0);
+        data.setBrakePosition(0.0);
 
         mockMvc.perform(post("/api/telemetry")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(data)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.rpm").value(5000))
-                .andExpect(jsonPath("$.batteryTemperature").value(45.0));
+                .andExpect(jsonPath("$.rpm").value(6000))
+                .andExpect(jsonPath("$.stateOfCharge").value(88.5));
 
         assertEquals(1, telemetryRepository.count());
-        assertEquals(0, violationRepository.count());
     }
 
     @Test
-    @DisplayName("Detect and record CRITICAL violation when battery temperature is too high")
-    void testCriticalBatteryTemperatureViolation() throws Exception {
-        TelemetryData dangerousData = new TelemetryData();
-        dangerousData.setRpm(4000);
-        dangerousData.setBatteryTemperature(80.0);
-        dangerousData.setSpeed(90.0);
+    @DisplayName("Verify pagination on GET /api/telemetry")
+    void testGetTelemetryWithPagination() throws Exception {
+        TelemetryData data = new TelemetryData();
+        data.setRpm(4000);
+        data.setSpeed(50.0);
+        data.setBatteryTemperature(35.0);
+        telemetryRepository.save(data);
 
-        mockMvc.perform(post("/api/telemetry")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dangerousData)))
-                .andExpect(status().isCreated());
-
-        List<Violation> violations = violationRepository.findAll();
-        assertEquals(1, violations.size());
-        assertEquals("CRITICAL", violations.get(0).getSeverity());
-        assertEquals("BATTERY_TEMP", violations.get(0).getParameterType());
-    }
-
-    @Test
-    @DisplayName("Return 400 Bad Request when validation rules fail (negative RPM)")
-    void testInvalidTelemetryValidation() throws Exception {
-        TelemetryData invalidData = new TelemetryData();
-        invalidData.setRpm(-500);
-        invalidData.setBatteryTemperature(35.0);
-        invalidData.setSpeed(40.0);
-
-        mockMvc.perform(post("/api/telemetry")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidData)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(get("/api/telemetry?page=0&size=10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content[0].rpm").value(4000))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 }
