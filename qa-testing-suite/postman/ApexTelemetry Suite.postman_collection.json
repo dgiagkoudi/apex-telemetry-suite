@@ -1,13 +1,12 @@
 {
   "info": {
     "_postman_id": "7ba6a1c0-81a3-472e-9289-b851e9308a4d",
-    "name": "ApexTelemetry Suite",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "48792363"
+    "name": "ApexTelemetry Suite - V2 Enhanced",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "1. Submit Valid Telemetry",
+      "name": "1. Submit Valid Telemetry (Within Limits)",
       "event": [
         {
           "listen": "test",
@@ -17,41 +16,34 @@
               "    pm.response.to.have.status(201);\r",
               "});"
             ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
+            "type": "text/javascript"
           }
         }
       ],
       "request": {
         "method": "POST",
-        "header": [],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"rpm\": 6000,\r\n  \"batteryTemperature\": 40.2,\r\n  \"speed\": 80.0\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
+          "raw": "{\r\n  \"rpm\": 5500,\r\n  \"speed\": 75.2,\r\n  \"batteryTemperature\": 42.1,\r\n  \"stateOfCharge\": 92.5,\r\n  \"accumulatorVoltage\": 350.0,\r\n  \"accumulatorCurrent\": 120.0,\r\n  \"gforceX\": 0.45,\r\n  \"gforceY\": 0.12,\r\n  \"gforceZ\": 0.98,\r\n  \"steeringAngle\": 5.5,\r\n  \"throttlePosition\": 45.0,\r\n  \"brakePosition\": 0.0\r\n}"
         },
         "url": {
           "raw": "http://localhost:8080/api/telemetry",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [
-            "api",
-            "telemetry"
-          ]
+          "path": ["api", "telemetry"]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "2. Trigger Violation",
+      "name": "2. Trigger Critical Power & Temp Violations",
       "event": [
         {
           "listen": "test",
@@ -61,53 +53,35 @@
               "    pm.response.to.have.status(201);\r",
               "});"
             ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
+            "type": "text/javascript"
           }
         }
       ],
       "request": {
         "method": "POST",
-        "header": [],
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json",
+            "type": "text"
+          }
+        ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"rpm\": 4500,\r\n  \"batteryTemperature\": 79.5,\r\n  \"speed\": 55.0\r\n}",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
+          "raw": "{\r\n  \"rpm\": 9500,\r\n  \"speed\": 132.0,\r\n  \"batteryTemperature\": 78.5,\r\n  \"stateOfCharge\": 85.0,\r\n  \"accumulatorVoltage\": 390.0,\r\n  \"accumulatorCurrent\": 240.0,\r\n  \"gforceX\": 1.85,\r\n  \"gforceY\": -1.15,\r\n  \"gforceZ\": 0.25,\r\n  \"steeringAngle\": -22.4,\r\n  \"throttlePosition\": 100.0,\r\n  \"brakePosition\": 0.0\r\n}"
         },
         "url": {
           "raw": "http://localhost:8080/api/telemetry",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [
-            "api",
-            "telemetry"
-          ]
+          "path": ["api", "telemetry"]
         }
-      },
-      "response": []
+      }
     },
     {
-      "name": "3. Get Violations",
+      "name": "3. Get Violations & Assert Severity",
       "event": [
-        {
-          "listen": "prerequest",
-          "script": {
-            "exec": [
-              ""
-            ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
-          }
-        },
         {
           "listen": "test",
           "script": {
@@ -116,17 +90,15 @@
               "    pm.response.to.have.status(200);\r",
               "});\r",
               "\r",
-              "pm.test(\"Violations array is not empty and contains CRITICAL severity\", function () {\r",
+              "pm.test(\"Violations array contains logged anomalies\", function () {\r",
               "    var jsonData = pm.response.json();\r",
-              "    \r",
               "    pm.expect(jsonData.length).to.be.above(0);\r",
               "    \r",
-              "    pm.expect(jsonData[0].severity).to.eql(\"CRITICAL\");\r",
+              "    var hasCritical = jsonData.some(v => v.severity === 'CRITICAL');\r",
+              "    pm.expect(hasCritical).to.be.true;\r",
               "});"
             ],
-            "type": "text/javascript",
-            "packages": {},
-            "requests": {}
+            "type": "text/javascript"
           }
         }
       ],
@@ -136,18 +108,11 @@
         "url": {
           "raw": "http://localhost:8080/api/telemetry/violations",
           "protocol": "http",
-          "host": [
-            "localhost"
-          ],
+          "host": ["localhost"],
           "port": "8080",
-          "path": [
-            "api",
-            "telemetry",
-            "violations"
-          ]
+          "path": ["api", "telemetry", "violations"]
         }
-      },
-      "response": []
+      }
     }
   ]
 }
