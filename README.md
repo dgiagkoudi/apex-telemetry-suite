@@ -1,24 +1,61 @@
-# APEX Telemetry Suite
+# APEX Telemetry Suite (V2 Enhanced)
 
-A full-stack, end-to-end telemetry and observability platform designed for real-time race car data tracking, safety threshold monitoring, and QA automation.
+A full-stack, end-to-end telemetry and observability platform designed for real-time race car data tracking, Formula Student safety threshold monitoring, and QA automation. The platform features sub-second data streaming pipelines connecting high-fidelity powertrain sensors directly to the trackside pit wall dashboard.
+
+## Dashboard Preview (Real-Time Simulation)
+
+![Aristurtle Telemetry Desk Preview](frontend/src/assets/dashboard-preview.png)
+*Figure 1: Real-time trackside telemetry view intercepting a critical 80kW power violation and thermal anomaly.*
 
 ## Repository Structure (Monorepo)
 
-This repository is structured as a monorepo containing the following components:
+This repository is structured as a monoreposity containing the following engineered components:
 
-- `backend/`: Robust Spring Boot Java API featuring a Docker configuration. It processes live telemetry data, evaluates vehicle parameters against safety limits, and generates real-time violations.
-- `frontend/`: Live telemetry dashboard built with React, Vite, Tailwind CSS, and Recharts, optimized for sub-second visual performance.
-- `qa-testing-suite/`: Automated QA suite containing Postman environment configurations and integration tests to validate API schema integrity, business logic, and error boundaries.
+- `backend/` — Robust Spring Boot 3 API featuring an isolated Dockerized ecosystem. It processes high-frequency telemetry sequences, executes server-side safety logic (intercepting battery temperature alerts and the statutory 80.0 kW Formula Student power threshold), and broadcasts events asynchronously via STOMP WebSockets.
+- `frontend/` — Live racing telemetry dashboard built with React 19, Vite, Tailwind CSS, and Recharts. Subscribed to STOMP streams to render real-time charts (last 30 ticks), driver input status bars (throttle/brake), multi-axis G-Force indicators, and flashing pit wall violation logs.
+- `qa-testing-suite/` — Quality Assurance matrix containing updated Postman collection test suites and headless integration scripts to validate 12+ sensor parameter payloads, business rule edge cases, and API contract state boundaries.
 
-## Live Deployments
+## Core System Architecture & Real-Time Data Flow
 
-- Frontend Dashboard: Deployed on Vercel
-- Core Backend API: Deployed on Render (via Docker container)
+1. Ingestion: Telemetry payloads (JSON) are submitted via `POST http://localhost:8080/api/telemetry` (simulating car-to-pit hardware transmission).
+2. Evaluation: The Spring Boot backend maps the 12+ parameters, calculates instant power consumption ($V \times I$), and persists logs. If limits are breached, `Violation` objects are compiled on-the-fly.
+3. Broadcasting: Live metrics and safety violations are pushed asynchronously over WebSocket topics (`/topic/live-data` and `/topic/violations`).
+4. Visualization: The React dashboard intercepts the frames, performing reactive UI paint updates while historical tracking pulls initialized states via `GET http://localhost:8080/api/telemetry/violations`.
 
-## Local Development Setup
+## Local Development Setup & Verification
 
-To spin up the entire suite locally, clone the repository and follow the setup guides inside each respective folder:
+To spin up the entire telemetry environment locally and reproduce the simulation, follow these steps in order:
 
-1. Backend: Navigate to `/backend`, configure your local database settings, and run `./mvnw spring-boot:run`.
-2. Frontend: Navigate to `/frontend`, install dependencies via `npm install`, add a local `.env` pointing to your localhost API, and start with `npm run dev`.
-3. QA Automation: Import the Postman collection and environment files located inside `/qa-testing-suite` to execute automated validation tests.
+### 1. Backend Service
+
+1. Navigate to the `/backend` directory.
+2. Configure your local database properties or environment parameters.
+3. Spin up the engine using the Maven wrapper:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+4. Confirm the API and WebSocket server are running on `http://localhost:8080`.
+
+### 2. Frontend Interface
+
+1. Navigate to the `/frontend` directory.
+2. Install the node packages (including STOMP and Lucide dependencies):
+   ```bash
+   npm install
+   ```
+3. Establish your local `.env` configuration pointing `VITE_API_BASE_URL` and `VITE_WS_BASE_URL` to your localhost instances.
+4. Launch the local development environment:
+   ```bash
+   npm run dev
+   ```
+5. Open `http://localhost:5173` to view the Aristurtle Telemetry Desk (Verify the `LIVE TELEMETRY: CONNECTED` status badge).
+
+### 3. QA Automation & Live Simulation
+
+1. Navigate to the `/qa-testing-suite/postman/` directory.
+2. Import the `ApexTelemetry Suite` collection JSON file directly into Postman.
+3. To trigger the simulated race track alert environment:
+   * Execute request `1. Submit Valid Telemetry (Within Limits)` to seed baseline stable data.
+   * Execute request `2. Trigger Critical Power & Temp Violations` to push extreme values ($93.6\text{ kW}$ and $78.5^\circ\text{C}$).
+   * Execute request `3. Get Violations & Assert Severity` which queries `http://localhost:8080/api/telemetry/violations` to verify that the backend successfully generated and persisted the `CRITICAL` safety data rows.
+4. Keep the frontend dashboard open at `http://localhost:5173` simultaneously to witness the telemetry graph dynamic spikes and flashing red alerts interface update instantly via WebSockets without page reload.
