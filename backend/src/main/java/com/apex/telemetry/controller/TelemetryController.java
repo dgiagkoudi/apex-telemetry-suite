@@ -17,7 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/telemetry")
-@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"})
+@CrossOrigin(originPatterns = "*", allowedHeaders = "*", allowCredentials = "false")
 public class TelemetryController {
 
     @Autowired
