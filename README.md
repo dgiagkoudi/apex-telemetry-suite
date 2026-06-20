@@ -22,6 +22,18 @@ This repository is structured as a monoreposity containing the following enginee
 3. Broadcasting: Live metrics and safety violations are pushed asynchronously over WebSocket topics (`/topic/live-data` and `/topic/violations`).
 4. Visualization: The React dashboard intercepts the frames, performing reactive UI paint updates while historical tracking pulls initialized states via `GET http://localhost:8080/api/telemetry/violations`.
 
+## Deployments
+
+The application is fully deployed in a monorepo cloud architecture and can be accessed through the following live links:
+
+| Component | Deployment Platform | Live Link | Status / Notes |
+| :--- | :--- | :--- | :--- |
+| Frontend (UI) | Vercel | [Live Demo](https://apex-telemetry-suite-chi.vercel.app/) | Production Build (React & Tailwind) |
+| Backend (API) | Render | [API Endpoint](https://apex-telemetry-suite.onrender.com/) | Live Server (Spring Boot & Docker) |
+
+- Cold Start Delay (Render Free Tier): The backend server is hosted on Render's free tier. If the application has been inactive for more than 15 minutes, the server will automatically spin down (spin to sleep). Opening the frontend for the first time might trigger a 40-60 second delay while the instance wakes up.
+- WebSocket Secure (WSS): All realtime telemetry data streams through a secure WebSocket tunnel (`wss://`) managed by Render's reverse proxy network to bypass dynamic browser CORS blocks.
+
 ## Local Development Setup & Verification
 
 To spin up the entire telemetry environment locally and reproduce the simulation, follow these steps in order:
